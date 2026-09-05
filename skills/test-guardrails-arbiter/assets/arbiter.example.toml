@@ -1,0 +1,11 @@
+# 可移植示例，不是原文 runner 的兼容性保证，也不会自行执行。
+# 假设目标项目有以下声明源、生成目录和已注册检查；使用前改成真实值。
+# paths 与 forbid 的 glob、大小写、注释和新增行语义由目标 runner 定义。
+id = "generated-api-source"
+risk = "high"
+paths = ["api/schema/**", "src/generated/**"]
+invariant = "API 类型来自 api/schema；生成物的变更必须能由声明源和生成器复现。"
+read = ["api/schema/README.md"]
+# 生成物来源不能由一个字符串可靠判断；用下面的 sync check 执行该约束。
+forbid = []
+checks = ["generated:sync", "test:api-contract"]
