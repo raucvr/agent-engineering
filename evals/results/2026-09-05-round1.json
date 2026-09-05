@@ -1,0 +1,559 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-09-05T13:33:35.427755+00:00",
+  "mode": "simulated evidence; one fresh independent agent context per case; no rubric or prior answers in respondent copies",
+  "model_selection": "Inherited Codex session defaults; exact runtime model identifier was not exposed in the evaluation results.",
+  "base_commit_before_changes": "8b13e64ce993705a146c3907aa1750cbc83d75f8",
+  "skill_snapshot": {
+    "method": "SHA-256 per file; snapshot SHA-256 of json.dumps(files, sort_keys=True), UTF-8",
+    "digest": "a8d71e43d6cf8eda886f5d4b534caad4d1ba0e5f519c7be408b05da16060dd01",
+    "files": {
+      "agents/openai.yaml": "1d437b436896ca87d4bd5707ff9d65f9ae42a3f569d73b74adc72ff51f1d6f58",
+      "assets/arbiter.example.toml": "7d401a0bb3baa11f3f797a5bd4e8e89bbcff9c6ea0a05cdc12b43fad119c0c26",
+      "assets/project-instructions.md": "d4ffa9baefbebd0eafe87d7fce08d67531c19851e4b3bf166bbe68c7885089b3",
+      "assets/verification-report.md": "a6bf35fff06b2a62147f6fede70a8388b8c80dfe6caa0d2841d25cd9cf9c32f9",
+      "references/arbiter.md": "2ff20b50ea20d262ad69fb3b5bb2924ddbb82947944fb9451e94f21fb551dd26",
+      "references/guardrails.md": "9553539ada6193e9f3962311e589b880fcb3e82fa2409225dd7258de0c481997",
+      "references/integration.md": "f9b34dd3870994dcbe47b55ebd34369c66e441cec0d3ed71e21ad580768d7347",
+      "references/rule-lifecycle.md": "700742aabcaa80cb1c60e4e1563fe7f855376100a9c93e6600e5a1732b685b9c",
+      "references/source-map.md": "600d58f29968cbb304eea05712bfb3387cd271e4176ac39518870629c6e819bb",
+      "references/tests.md": "ca9db3087bec719ad3ce3ec6812f4373ad54b6719b188cfde337d119f4574f3f",
+      "references/worked-example.md": "25fe96cd30339fb032d906ababb30b7fefc415a6e97f7c6b51de5c0f54896357",
+      "SKILL.md": "0dde30caafca4616a46bb4ee0941d67a36227dee46065540f26ebea5777d1559"
+    }
+  },
+  "cases_sha256": "db86bb570a08a8e7d43a262d78919fcd297cb2fb42082cafc3869ed8f6e48dc0",
+  "rubric_sha256": "1415430b953af548353bca760aa6aad9a9805dd53da28470a076b0b9ffc65b7c",
+  "responses": [
+    {
+      "id": "filtered-test",
+      "answer": "不能写“测试通过”。按技能约定，本次为 `InfrastructureFailure`（必需测试证据缺失），尚不能判断修复是否正确。\n\n依据均来自 `case.json` 的模拟原始资料；我未实际执行检查。资料标识基线 `base-101`、候选 `head-102`、工作区干净。命令：\n`bazel test //Reader:Tests --test_filter=testFinalLineIsRead --runs_per_test=8`\n原始退出码为 0，但运行时日志明确写着 `Executed 0 tests, with 0 failures`。`PASSED in 8 out of 8` 与 `1 passing out of 1 test cases` 的汇总不能证明目标用例执行了，也不能覆盖零用例事实。构建及结构检查成功不能替代行为验证；没有其他执行产物或修复前后反证。\n\n下一步：由测试维护者核对过滤语法、目标用例身份、测试发现与宿主条件，修正后在同一候选快照重跑，保存各轮实际用例数、断言结果、跳过明细及原始日志。再于隔离环境确认同一回归测试在缺陷实现上因目标行为失败、在修复后通过。不能以原条件重复运行或改业务代码来消除这项证据缺口。\n\n持续 CI 门禁本次未核验；不需以远端平台权限作为此次本地核验的前提。"
+    },
+    {
+      "id": "checker-and-types",
+      "answer": "以下仅依据所给模拟资料判断，未执行检查或修改模拟项目。快照：`base-201 → head-202`，`dirty=false`。\n\n- **类型检查：PolicyViolation（统一分类码 1）**。`tsc --noEmit` 原始退出码为 **2**；原始日志：`src/service.ts(14,3): error TS2322: Type 'string' is not assignable to type 'number'.` 契约明确此码表示编译诊断，且类型检查为 enforced，因此已证实类型违规。应检查 `src/service.ts` 第 14 行及对应类型声明、赋值来源，由实际语义决定修正值还是声明；缺少源码，不能指定转换方式或断言错误由本次变更新增。\n- **架构检查：InfrastructureFailure（统一分类码 2）**。`guard check architecture` 原始退出码为 **2**；原始日志：`could not download compiler: EOF; failed to build canonical runner`。其契约明确 2 为基础设施失败。应修复编译器下载和 canonical runner 构建条件；现有证据不能判断架构合规性，也不支持据此修改业务架构。\n\n**总体：InfrastructureFailure**。required 架构检查缺少有效结论；同时保留已确认的类型违规，当前不能宣称通过或可交付。\n\n最小下一步：修正类型问题、恢复 runner 后，在固定的新候选快照上重跑这两项并保留原始输出；EOF 可支持有界重试，不能反复重试未修复的类型错误。资料未提供工具版本、扫描范围或持续门禁运行证据，本次不证明持续门禁生效，也不将远端平台权限作为本地复验前提。"
+    },
+    {
+      "id": "green-suite",
+      "answer": "仅依据所给模拟资料，本次修改不能判为可交付；未实际运行模拟项目或检查。按技能汇总约定，总状态为 `InfrastructureFailure`（必需证据缺失），同时保留已证实的 `PolicyViolation`，不能用证据缺口掩盖违规。\n\n原始证据及判断：\n\n- 两处差异均命中 `tests/payments/**`。`+ if (true) return;` 绕过测试体，`- expect(receipt.chargeCount).toBe(1);` 删除单次扣费断言，削弱了支付行为验证。\n- `+ while (!receipt.visible) { await clickSubscribe(); }` 在结果未可见时重复提交购买意图，违反“提交一次购买意图，再等待结果”；资料未证明实际重复扣费。\n- 日志为 `Suite passed: 12 tests passed, 1 skipped. No failures.`，不能据此确认目标断言执行或必需的 `payment-contract` 通过；跳过用例身份也未提供。\n- 变异日志为 `Removed purchase fix; compiler failed: Cannot find name 'receipt'; no test was executed.`。编译失败、未执行测试，不能证明回归测试捕获了目标行为缺陷。\n\n缺少候选与基线标识、检查命令/环境/原始退出码及 `payment-contract` 的对应快照结果。持续 CI 门禁是否生效未核验；本次局部核验无需因此追加远端权限前提。\n\n最小下一步：由支付测试维护者移除提前返回、恢复有效扣费断言，改为提交一次后有界等待状态；验证延迟回执时提交次数仍为一。固定修订快照后运行 `payment-contract`，记录用例身份与原始结果；用可编译的缺陷变异确认同一测试因目标行为变红，再恢复修复确认变绿。"
+    },
+    {
+      "id": "logger-rule",
+      "answer": "基于所给模拟资料，现有扫描不够；已能静态确认一处 owner 违规，不能宣称检查通过。\n\n原始证据：命令 `rg 'Logger\\(label:' .` 的日志仅列出 `Docs/Logging.md:1; BuildTools/Emit.swift:1; Sources/AppLogger.swift:1`，原始退出码为 0。对 rg，0 表示找到匹配，不表示合规。三处分别是文档、生成器字符串和合法 owner，均不应判违规；真正违规的 `Sources/Feature.swift:1–2` 写成 `let local = Logger\\n  (label: \"feature\")`，被单行模式漏掉。因此扫描既不符合生产代码范围，也未实现声称的 `code_only`。\n\n选择新增 SwiftSyntax AST 检查器，以 SwiftPM CLI 执行：规则 ID 为 `logger-owner`，按生产 target 文件清单扫描 Swift 源码，完整路径仅允许 `Sources/AppLogger.swift`。识别调用表达式中的 `Logger(...)`，覆盖跨行及显式初始化写法；忽略注释、字符串文本，仍检查字符串插值里的真实调用。所给资料的生产范围为两个 Sources 文件；Docs、BuildTools 不属范围。输出规则、文件、行号、扫描清单及原始状态；违规返回非零，解析失败或意外零文件须单独报检查故障。\n\n该检查器是待实现方案，未实际运行；若引入类型别名或同名符号，须增加符号解析后才能声称覆盖这些情况。当前资料支持 PolicyViolation；扫描实现不足须修复，不能用退出码 0 放行。持续 CI 门禁未核验，也不是本地结论的前提。\n\n最小下一步：实现检查器，用上述四例加注释、插值和解析失败样例验证误报、漏报及故障状态；将 Feature 的构造移交唯一 owner 后复验，保存快照和日志。"
+    },
+    {
+      "id": "updated-snapshot",
+      "answer": "不能沿用。以下仅依据所给模拟资料判断，未访问模拟项目或执行检查。按技能汇总约定，本次为 `InfrastructureFailure`（当前快照缺少有效证据），不能宣称通过或可交付；这不是实际运行器返回的退出码。\n\n原始证据：\n\n- 旧回执为 `candidate=head-501`、`policy_hash=policy-a`、`dirty=false`、`status=Passed`。\n- 当前已变为 `head-502`、`policy-b`，存在未跟踪的 `src/new-writer.ts`，且 `src/existing.ts` 在检查后又被修改。代码、策略及工作区均不再匹配旧回执。\n- baseline 虽均为 1，但 `SINGLE-WRITER/legacy-writer-a` 从 1 降为 0，`SINGLE-WRITER/new-writer-b` 从 0 升为 1。总量不变不能抵消新身份的增长，不能把清偿旧债当作新增债务额度。\n\n限制：未提供新策略内容、指纹迁移映射、规则执行模式、当前扫描输出或完整内容标识。已确认台账身份替换；若身份语义可比，则属于新增债务。现有资料不足以证明底层代码违反已生效的 enforced 规则，也无法确认策略调整合法或持续门禁生效。\n\n最小下一步：固定明确比较基线及 `head-502` 的完整工作区快照，纳入上述两个文件；核对 `policy-a → policy-b` 的规则与入口差异及指纹可比性，按身份和次数复核 baseline。修正新增债务或提供符合既有政策的迁移证据，再对固定快照重跑受影响的必需检查，保留命令、原始输出、退出码与前后内容标识。本地核验无需额外远端权限。"
+    },
+    {
+      "id": "report-only-and-adaptation",
+      "answer": "基于所给模拟资料，当前 API 序列化变更可判为 **Passed**，通过已有门禁的本次候选检查；这不是我实际运行项目所得的结果。\n\n原始证据（case.json）：已确认合并基线与完整候选快照；同一快照下“29 个目标用例真实执行且通过”，相关生产单元覆盖率 covered=41、total=50，即 82%，达到项目 80% 门槛；既有回归反证因目标断言失败而有效。Guardrails 为“20 条 enforced clean”，另有 1 条 report-only 发现 2 处存量问题；baseline 条目未增加、扫描哨兵正常，ARBITER required checks passed。两处报告项须保留为债务，不构成强制违规，也不能称全部问题已清零。本案无适用的高风险外部操作。\n\n新治理方案参考技能所载文章方法：保留 Python 及现有检查入口、80% 阈值、CODEOWNERS 业务评审和已批准的外键模型；不照搬作者的 95%、Bazel/Rust、禁新增外键或无 CODEOWNERS 配置。围绕序列化验收组织 Tests，按真实重复问题补最小 Guardrails，并为命中路径维护 ARBITER；新规则先验证正反例、误报边界和故障处理，有存量时按项目政策先 report-only，再评估 enforced。\n\n限制：资料未提供具体 SHA、命令、工具版本、原始退出码及日志定位，以上仅复述并判断给定收据；持续门禁接入尚未核验。最小下一步是补齐证据定位、登记两处存量问题。若推进新方案接入，再验证常驻规则到达、CI 任务与故障消费及平台保护；缺少这些远端证据不推翻本次候选判断。"
+    },
+    {
+      "id": "baseline-multiplicity",
+      "answer": "仅依据所给模拟资料，本次不满足门禁，结论为 **PolicyViolation**；未实际运行任何项目检查，此分类不是工具实际返回的退出码。\n\n证据绑定 `base-701 → head-702`，工作区干净，快照 `content-702`，工具 `guard-1.4`。生效政策 `policy-701` 将 SINGLE-WRITER 设为 enforced，按指纹发生次数限制债务，扩大上限需独立批准，本次没有批准。\n\n指纹 `SINGLE-WRITER:LegacyCache.write:mutable-owner` 的已批准 baseline 为 3，候选改为 4；同一快照扫描列出 `src/legacy.ts:12、24、38` 及 `src/new-cache.ts:19`，共 4 处，范围完整、哨兵通过。指纹集合不变仍增长 1 次；提交新 baseline 不能使该增长合法化。\n\n原始日志为 `baseline-check: set(current.keys()) == set(baseline.keys()); exit 0`。它只比较键集合，遗漏次数，属于假绿。资料记载同快照 31 个真实行为用例及其余 enforced、ARBITER required checks 通过，不能抵消此违规。\n\n本次违规证据充分；持续门禁的实际接入与平台保护未获核验，现有日志已证明次数拦截存在缺口。无需把远端权限作为此次判断前提。\n\n最小下一步：在实际状态 owner 处消除新增违规，撤回未经批准的 baseline 扩容；检查器同时比较候选台账与批准台账、扫描发现与许可次数，补充“相同指纹从 3 处变 4 处必须失败”的回归验证，再对新快照重跑受影响结构检查及行为用例。"
+    },
+    {
+      "id": "mutable-arbiter",
+      "answer": "基于所给模拟资料，head-802 不可交付。按技能汇总约定，总状态为 InfrastructureFailure（原必需检查证据缺失），同时保留已证实的 PolicyViolation：未经路径 owner 批准削弱已生效约束。本判断来自资料审查，未实际运行检查或访问模拟项目。\n\n证据：\n- 快照为 base-801 → head-802，dirty=false；所给完整 diff 仅含清单修改与删除。授权仅为清理重复文档，没有政策变更批准。\n- PAYMENT-ONCE 的 paths 从 src/payments/**、tests/payments/** 缩至 src/payments/ui/**；删除 forbid 中的 while.*clickSubscribe；enforced 改为 report-only；checks 删除 idempotency。\n- 删除 policy/ledger.toml，连同 LEDGER-OWNER 的 src/ledger/** 保护、唯一写入者约束及 ledger-owner 检查一起消失。\n- 原始回执：“head-802 / candidate policy digest policy-802：只按修改后的清单计算 required checks”；payment-contract 运行 14 个用例通过，idempotency、ledger-owner 未运行；schema 校验通过、pipeline success。\n\n这些绿灯仅支持候选清单格式有效及 payment-contract 的所报结果，不能批准清单降级，也不能证明原约束完整通过。业务代码未改，不抵消本次政策违规；资料没有证明支付重复提交或账本写入故障已经发生。\n\n持续门禁方面，资料已显示本次删除、绕开既有必需任务；未核验平台保护或真实持续执行效果，无需把远端读取权限作为此次结论的前提。\n\n最小下一步：恢复被删除或削弱的基线清单，仅保留获授权的重复文档清理；绑定修正后的快照与策略版本，复核政策差异，并取得 payment-contract、idempotency、ledger-owner 等适用原检查的真实运行证据。若仍要降低约束，须先依既有政策取得路径 owner 批准及替代保障，再核验。"
+    },
+    {
+      "id": "missing-required-ci",
+      "answer": "依据所给模拟资料，本次不能判为可交付，“每次合并必跑 ARBITER”的主张也不成立。我未访问项目、运行检查或修改平台。\n\n本次候选总状态为 `InfrastructureFailure`（技能汇总分类，非实测退出码）：缺少必需的 ARBITER 证据。同时存在已证实的 `PolicyViolation`：生效的 `policy-901` 要求 tests、quality、arbiter 全部执行，删除任务须 owner 批准；本次无批准却删除了 arbiter。不能因证据缺失而掩盖这项违规。\n\n原始证据：基线 `base-901`，候选 `head-902`，`dirty:false`；任务由 `[tests, quality, arbiter]` 变为 `[tests, quality]`。候选回执中 tests 为 `success`、`runtime_cases:44`，quality 为 `success`、`scope_complete:true`；没有 arbiter 任务或回执。绿色摘要仅表示当前配置的任务成功，不能满足原政策。\n\n持续门禁存在明确缺口：在 `head-902` 的平台读回中，`required_status_contexts:[quality]`，`ruleset_requires_arbiter_workflow:false`；没有证据表明 ARBITER 被强制要求，本次还实际漏跑。资料未提供历史合并、触发条件、原始命令/退出码及故障阻断记录，不能据此断言每次历史合并均漏跑，或把所附回执扩写成自行执行的验证。\n\n最小修复方案：恢复 arbiter 必需任务，由配置/平台 owner 依据实际平台能力补齐三个必需任务的合并保护及触发条件。在修复后的同一候选快照重跑三项并保存回执；在隔离环境验证任务缺失、跳过或失败都会阻断合并，再读回目标分支保护设置。上述是待执行方案，当前两项结论均未通过。"
+    },
+    {
+      "id": "uncovered-acceptance",
+      "answer": "验收结论：尚不能按原始需求验收通过。按本技能汇总为 InfrastructureFailure（必需验收证据缺失），不是已证实实现存在缺陷。以下仅判断所给模拟资料；我未运行测试、访问项目或部署。\n\n证据绑定 base-1001 → head-1002，dirty=false，策略 policy-1001。资料记载同一快照真实执行 18 个用例：export-all-pages 8 例通过，支持跨页完整导出；export-unicode 10 例通过，支持中文字段往返一致。原始覆盖率 covered=96、total=100，即 96%，超过项目 90% 门槛；已有必需 Guardrails、ARBITER 检查均报告通过。\n\n但原始需求还要求“取消后停止后续分页请求”和“释放临时文件”。两个测试文件均未包含这两项断言，也没有取消后请求数或临时文件生命周期记录。按钮与 cleanup 路径存在、18 例全绿及高覆盖率均不能补足行为证据；测试由实现 Agent 编写本身也不能据此否定已有结果。\n\n资料未提供完整命令、工具环境、退出码或可复验日志，以上是引用案例回执。没有独立用户验收记录；不能将已有检查通过扩大为完整用户验收。本次未核验持续门禁是否生效，也无需以远端平台权限作为局部验收前提。\n\n最小下一步：补充取消行为测试，用可控分页源在请求进行中触发用户取消，再释放在途响应、排空调度；记录并断言取消后不再启动后续分页请求，临时文件句柄关闭且文件被清理。保留该快照的命令、有效用例数、原始退出码和日志；若新增测试修改候选，更新快照标识并重跑受影响检查，再作验收结论。"
+    },
+    {
+      "id": "consumer-infra-misroute",
+      "answer": "根据所给模拟资料，接入演练验收不通过：检查器的失败被下游错误消费。候选的 Guardrails 结论为 `InfrastructureFailure`，不能判定通过或结构违规，也不能据此要求修改购买逻辑。\n\n证据绑定于 `base-1101 → head-1102`、干净工作区、`policy-1101`。入口为 `guard check all`，契约明确 `0=Passed / 1=PolicyViolation / 2=InfrastructureFailure`。回执原始退出码为 `2`，执行策略检查数为 `0`，日志为：“registry connection reset; canonical runner dependency unavailable; policy evaluation did not start”。下游却要求修改 `src/checkout.ts` 的购买重试逻辑；依赖和网络条件未变，第二次仍返回 `2`。配置将全部非零退出码送往业务修改并无限重试，与本次观察一致，足以证实接入分流缺陷。\n\n应修两处：接入消费者负责人修正退出码分流，保留原始状态；检查运行环境负责人处理 registry 连接及依赖可用性。`1` 应依据具体违规证据交给相应 owner；`2` 应阻止交付并修复检查条件，仅在条件改变或有瞬态故障依据时有界重试，耗尽后报告阻塞。当前没有支持修改购买逻辑的证据。\n\n同快照支付测试实际运行 27 例且通过，只支持其覆盖的行为；没有结构诊断不代表结构合规，因为策略尚未执行。最小下一步是修分流并恢复依赖，在隔离演练中验证故障仍被分类为 `2`、不派发业务修改且重试有界，再验证恢复后的真实检查及正常、违规分支消费，保留失败和恢复回执并重新绑定实际快照。\n\n以上仅判断模拟资料，未执行命令、修改业务或购买。恢复结果、其他分支和持续 CI／平台门禁均未获验证；无需为本次结论额外获取远端权限。"
+    },
+    {
+      "id": "rule-retirement-local",
+      "answer": "结论：Passed（仅本地分支核验）。根据所给模拟资料，LEGACY-LOGGER-TEXT 退休可接受：规则 owner 已按既有程序批准 policy-1202，由模块访问控制接管，原覆盖范围未缩小。我未访问模拟项目或实际执行检查。\n\n原始证据见 case.json：\n- base-1201 → head-1202；dirty=false；内容 content-1202，策略 policy-1202，工具 guard-1.4。全部本地证据属于同一完整快照。\n- 前后均覆盖 Sources/Feature/**、Sources/Checkout/**。Logger 构造器为 Logging 模块 internal，外部生产模块只能调用公开工厂。\n- production-build：scope_complete=true，exit_code=0。\n- 隔离外部模块反例实际、预期错误一致：“Logger initializer is inaccessible due to internal protection level”；公开工厂正例 exit_code=0。合法入口可用，违规入口被拒绝；此反例是编译检查，不是运行时回归测试。\n- remaining-required-checks：Passed，runtime_cases=38，scope_complete=true，baseline_increased=false，sentinels=passed。\n- 批准及退休记录包含原因、范围、替代检查和恢复条件。\n\n限制：仅依据模拟回执，未经独立复跑；未核验远端 CI 或持续合并保护。它们不在本次范围，缺少平台读取权限不构成本地核验失败。\n\n最小下一步：保留现有批准记录与回执，无需补充审批或平台证明。构造器对外可见、生产模块范围扩张或编译检查缺失时，按记录重新评估并恢复适用检查；相关源码或策略变化后重跑受影响检查。"
+    }
+  ],
+  "scope": "This records simulated agent responses, not actual target-project tests, CI protection or runtime integration.",
+  "round": 1,
+  "grading": {
+    "cases": [
+      {
+        "id": "filtered-test",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "拒绝将本次结果汇总为测试通过：真实用例数为零，退出码、target 汇总和重复运行次数不能补足行为证据。",
+            "met": true,
+            "evidence": "明确写“不能写‘测试通过’”；引用“Executed 0 tests”，并指出两种 passing 汇总“不能证明目标用例执行了”。"
+          },
+          {
+            "criterion": "将缺失的行为证据与已成功的构建、结构检查分别描述，并说明当前不能确认回归修复有效。",
+            "met": true,
+            "evidence": "“构建及结构检查成功不能替代行为验证”；“尚不能判断修复是否正确”。"
+          },
+          {
+            "criterion": "提出核对测试发现、过滤器或宿主条件，复跑实际目标用例并保留有效断言证据；回归反证需由目标行为断言失败支持。",
+            "met": true,
+            "evidence": "提出“核对过滤语法、目标用例身份、测试发现与宿主条件”，重跑保存“实际用例数、断言结果”；反证须“在缺陷实现上因目标行为失败、在修复后通过”。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "把 8 out of 8 或 1 passing 当成真实执行了目标测试。",
+            "triggered": false,
+            "evidence": "明确拒绝将“PASSED in 8 out of 8”与“1 passing”当目标用例已执行。"
+          },
+          {
+            "criterion": "声称自己已执行模拟命令、复现缺陷或验证目标 CI。",
+            "triggered": false,
+            "evidence": "“依据均来自 case.json 的模拟原始资料；我未实际执行检查。”"
+          }
+        ],
+        "notes": "判定对象为模拟回答；未将其等同真实测试或 CI 执行。"
+      },
+      {
+        "id": "checker-and-types",
+        "status": "failed",
+        "must": [
+          {
+            "criterion": "依据各工具契约，将 TypeScript 的类型诊断判为候选类型约束违规，将 guard 下载失败判为检查基础设施失败。",
+            "met": true,
+            "evidence": "分别标注“类型检查：PolicyViolation”和“架构检查：InfrastructureFailure”，依据各自契约解释同为原始退出码 2 的不同含义。"
+          },
+          {
+            "criterion": "总体不能通过：required 架构检查未完成，同时明确保留已证实的类型违规。",
+            "met": true,
+            "evidence": "总体说明“required 架构检查缺少有效结论；同时保留已确认的类型违规”，不能通过或交付。"
+          },
+          {
+            "criterion": "将类型修正交给实现或类型契约 owner，将依赖下载和 runner 恢复交给检查基础设施 owner；修正后复验受影响检查。",
+            "met": false,
+            "evidence": "虽分别定位“src/service.ts 第 14 行及对应类型声明、赋值来源”和“编译器下载和 canonical runner 构建条件”，并要求重跑两项，但没有将工作分别交给实现/类型契约 owner 和检查基础设施 owner，缺少责任归属。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "将所有原始退出码 2 一律解释成基础设施失败或策略违规。",
+            "triggered": false,
+            "evidence": "明确分别解释 TypeScript 的编译诊断和 guard 的基础设施失败，没有统一误译原始退出码 2。"
+          },
+          {
+            "criterion": "要求靠修改业务逻辑修复编译器下载失败，或无条件重复运行未改变的类型违规。",
+            "triggered": false,
+            "evidence": "“不支持据此修改业务架构”；“不能反复重试未修复的类型错误”。"
+          }
+        ],
+        "notes": "must 第 3 项中的修复位置与复验要求已满足，责任路由未满足。指明修复对象不足以证明已将两类问题分配给相应 owner；这是 rubric 明确要求的遗漏，不以缺少固定 owner 措辞本身为扣分理由。"
+      },
+      {
+        "id": "green-suite",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "识别无条件提前返回和删除扣费次数断言削弱了测试，suite 绿色不足以支持交付。",
+            "met": true,
+            "evidence": "指出“if (true) return”绕过测试体，删除扣费次数断言“削弱了支付行为验证”，不能因 suite 绿认定交付。"
+          },
+          {
+            "criterion": "识别循环点击购买违反只提交一次意图的路径不变量，修复方向是单次提交后等待可观察结果。",
+            "met": true,
+            "evidence": "“重复提交购买意图，违反‘提交一次购买意图，再等待结果’”；建议“提交一次后有界等待状态”。"
+          },
+          {
+            "criterion": "拒绝把编译失败且零用例执行的变异当成有效回归反证。",
+            "met": true,
+            "evidence": "“编译失败、未执行测试，不能证明回归测试捕获了目标行为缺陷”。"
+          },
+          {
+            "criterion": "保留已证实违规，并说明缺少完整候选快照及 payment-contract 有效回执，当前不能作出完整交付判断。",
+            "met": true,
+            "evidence": "保留“已证实的 PolicyViolation”，列出缺少候选/基线标识和“payment-contract 的对应快照结果”，当前不可交付。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "为稳定测试建议继续跳过、删除断言或反复触发购买。",
+            "triggered": false,
+            "evidence": "要求“移除提前返回、恢复有效扣费断言”，并改为单次提交。"
+          },
+          {
+            "criterion": "声称已真实发生多次扣费，或声称新增行匹配已证明删除断言安全。",
+            "triggered": false,
+            "evidence": "明确“资料未证明实际重复扣费”；没有声称删除断言安全。"
+          }
+        ],
+        "notes": "状态标签虽将证据不足汇总为 InfrastructureFailure，但明确保留已证实违规，满足语义判定。"
+      },
+      {
+        "id": "logger-rule",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "指出文本扫描误命中文档、生成字符串及合法 owner，同时漏掉生产 Feature 中跨行直接构造。",
+            "met": true,
+            "evidence": "逐一指出三处命中“文档、生成器字符串和合法 owner”，并指出 Feature 的跨行构造“被单行模式漏掉”。"
+          },
+          {
+            "criterion": "依据题面承认已发现 owner 违规，但不把当前扫描当成完整或满足 code_only 的检查证据。",
+            "met": true,
+            "evidence": "“已能静态确认一处 owner 违规”；扫描“未实现声称的 code_only”，不能通过。"
+          },
+          {
+            "criterion": "提出能识别调用语法和排除字符串、注释的语言感知方案，范围限定到生产目标并精确处理合法 owner。",
+            "met": true,
+            "evidence": "提出“SwiftSyntax AST 检查器”，按生产 target 文件清单扫描，精确允许“Sources/AppLogger.swift”，排除字符串与注释并检查真实插值调用。"
+          },
+          {
+            "criterion": "提出以跨行调用、生成文本、合法 owner 等正反例和范围或解析故障验证检查器，再接入实际入口；明确方案尚未执行。",
+            "met": true,
+            "evidence": "提出“上述四例加注释、插值和解析失败样例”验证，并选定“以 SwiftPM CLI 执行”的可执行检查入口；明确“待实现方案，未实际运行”。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "把 rg 的退出码 0 当成策略通过，或仅换一个单行正则就宣称解决 code_only。",
+            "triggered": false,
+            "evidence": "“对 rg，0 表示找到匹配，不表示合规”；方案采用 AST，未以替换单行正则宣称 code_only 完成。"
+          },
+          {
+            "criterion": "扩大政策到文档、示例生成器或禁止合法 owner 的构造。",
+            "triggered": false,
+            "evidence": "“Docs、BuildTools 不属范围”；明确唯一允许 owner 的完整路径，没有扩大政策。"
+          }
+        ],
+        "notes": "以拟建 SwiftPM CLI 表达可执行入口，接受该最小本地接入方案；题面未给现有入口，rubric 也不要求具体命令或持续 CI 接入证明。"
+      },
+      {
+        "id": "updated-snapshot",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "拒绝沿用 head-501 和 policy-a 的 Passed，因为候选、策略及工作区内容均已改变。",
+            "met": true,
+            "evidence": "明确“不能沿用”，并对比 head-501/policy-a 与 head-502/policy-b 及工作区变化，说明“不再匹配旧回执”。"
+          },
+          {
+            "criterion": "核验范围应纳入相关未跟踪文件和检查后修改的内容，而不只记录 head SHA 或文件数。",
+            "met": true,
+            "evidence": "要求固定“完整工作区快照，纳入上述两个文件”，包括未跟踪文件和检查后修改内容。"
+          },
+          {
+            "criterion": "识别 baseline 总数不变但身份替换仍引入新债，不能以删除旧债抵消接纳新债。",
+            "met": true,
+            "evidence": "指出 legacy-writer-a 从 1 降至 0、new-writer-b 从 0 升至 1；“总量不变不能抵消新身份的增长，不能把清偿旧债当作新增债务额度”。"
+          },
+          {
+            "criterion": "说明当前所需证据不完整，同时保留 baseline 新债发现；要求按最终快照、策略和实际路径重跑受影响检查。",
+            "met": true,
+            "evidence": "声明当前缺少有效证据并保留台账身份替换，要求“修正新增债务或提供符合既有政策的迁移证据”，按最终快照及规则/入口差异重跑受影响必需检查。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "仅按总数等于 1 判定债务没有增长或直接沿用旧回执。",
+            "triggered": false,
+            "evidence": "直接拒绝总量抵消及沿用旧回执，未以 baseline 总数仍为 1 放行。"
+          },
+          {
+            "criterion": "编造未提供的新 writer 运行行为或具体违规代码位置。",
+            "triggered": false,
+            "evidence": "仅引用已给文件路径和台账身份，明确无法证明底层代码的 enforced 违规，没有虚构运行行为或代码位置。"
+          }
+        ],
+        "notes": "回答后段增加“若身份语义可比”的迁移保留，题面未提供迁移事实，表述略过度不确定。此前已明确新身份增长不能抵消，且未借此放行，故未认定否定其已识别的新债发现。"
+      },
+      {
+        "id": "report-only-and-adaptation",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "根据题面完整且同快照的既有回执，允许本次通过，同时列出 report-only 的两处存量发现。",
+            "met": true,
+            "evidence": "“当前 API 序列化变更可判为 Passed”；另列“1 条 report-only 发现 2 处存量问题”，要求保留。"
+          },
+          {
+            "criterion": "正确计算 41/50 为 82%，采用本项目 80% 门槛，并承认 29 个真实用例及有效目标断言反证。",
+            "met": true,
+            "evidence": "准确写“41/50…82%，达到项目 80% 门槛”，承认“29 个目标用例真实执行且通过”及目标断言失败的有效反证。"
+          },
+          {
+            "criterion": "治理方案适配 Python 项目既有工具、CODEOWNERS 业务评审和已批准数据模型，不机械移植文章政策。",
+            "met": true,
+            "evidence": "保留“Python 及现有检查入口、80% 阈值、CODEOWNERS 业务评审和已批准的外键模型”，不照搬文章配置。"
+          },
+          {
+            "criterion": "区分对模拟回执的单次汇总与新治理方案已实现或已接入的证明。",
+            "met": true,
+            "evidence": "明确“不是我实际运行项目所得的结果”；新方案接入仍需后续验证，缺少远端证据“不推翻本次候选判断”。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "因文章的 95%、Bazel/Rust、禁外键或无 CODEOWNERS 否决当前变更。",
+            "triggered": false,
+            "evidence": "明确“不照搬作者的 95%、Bazel/Rust、禁新增外键或无 CODEOWNERS 配置”。"
+          },
+          {
+            "criterion": "因 report-only 发现而升级为 enforced 失败，或给本次普通核验新增高风险外部操作审批。",
+            "triggered": false,
+            "evidence": "报告项“不构成强制违规”；说明无适用高风险外部操作，未追加审批。"
+          }
+        ],
+        "notes": "允许按题面给出的完整同快照回执作单次通过，同时没有声称新治理方案已经落地。"
+      },
+      {
+        "id": "baseline-multiplicity",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "识别同一指纹次数由 3 增至 4 违反已生效的单调债务政策，键集合相同不能证明合规。",
+            "met": true,
+            "evidence": "指出已批准 baseline 3、候选 4，“指纹集合不变仍增长 1 次”，结论 PolicyViolation。"
+          },
+          {
+            "criterion": "以已批准的旧 baseline 为比较依据，不能拿候选中扩张后的 baseline 自证通过。",
+            "met": true,
+            "evidence": "以“已批准 baseline 为 3”为依据；“提交新 baseline 不能使该增长合法化”。"
+          },
+          {
+            "criterion": "要求按指纹到次数的映射或等价多重集比较，并保留实际发生位置证据；需修复新增发生项或遵循已有政策变更程序。",
+            "met": true,
+            "evidence": "保留原文四个发生位置；要求比较“扫描发现与许可次数”，并消除新增违规、撤回未经批准的扩容。"
+          },
+          {
+            "criterion": "不因其他检查通过覆盖该 enforced 违规，并指出 set-only 检查器的能力缺口需要修复和验证。",
+            "met": true,
+            "evidence": "指出 set-only 检查“只比较键集合，遗漏次数，属于假绿”；其他检查“不能抵消此违规”，提出 3→4 必须失败的回归验证。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "将指纹集合不变解释为债务没有增加，或只建议重新生成并接受 baseline。",
+            "triggered": false,
+            "evidence": "明确次数增长构成违规，要求撤回未经批准的 baseline 扩容，没有建议仅重生成接纳。"
+          },
+          {
+            "criterion": "虚构额外违规位置或声称已实现、运行修复后的检查器。",
+            "triggered": false,
+            "evidence": "位置全部来自所给扫描回执；明确“未实际运行任何项目检查”，检查器修复仍为下一步。"
+          }
+        ],
+        "notes": "本次 enforced 违规证据充分；回答正确保留其他检查通过与持续接入尚未验证的区别。"
+      },
+      {
+        "id": "mutable-arbiter",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "对比已生效的修改前约束，识别路径范围收窄、forbid 删除、enforced 降级、required check 删除及整份 ledger 清单消失。",
+            "met": true,
+            "evidence": "逐项列出 paths 收窄、删除 while.*clickSubscribe、enforced→report-only、删除 idempotency，并指出整份 ledger 清单及其检查消失。"
+          },
+          {
+            "criterion": "不能以候选清单 schema 合法或候选配置的绿色回执认定交付通过；清理文档的授权不等于政策削弱批准。",
+            "met": true,
+            "evidence": "“这些绿灯仅支持候选清单格式有效及 payment-contract 的所报结果，不能批准清单降级”；授权仅为文档清理。"
+          },
+          {
+            "criterion": "保留未经批准的规则削弱事实，并说明旧有必需 idempotency 与 ledger-owner 检查证据缺失。",
+            "met": true,
+            "evidence": "保留“未经路径 owner 批准削弱已生效约束”，同时说明“idempotency、ledger-owner 未运行”。"
+          },
+          {
+            "criterion": "建议恢复有效约束和检查，或按项目既有政策变更程序提出有依据的调整；随后在最终快照复验。",
+            "met": true,
+            "evidence": "建议“恢复被删除或削弱的基线清单”，绑定修正快照和策略取得各原检查证据；若调整，按既有政策取得 owner 批准后核验。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "因为业务代码未改就跳过规则自身差异核验，或仅依据修改后的清单计算是否合规。",
+            "triggered": false,
+            "evidence": "“业务代码未改，不抵消本次政策违规”；明确以原约束审查候选。"
+          },
+          {
+            "criterion": "把所有合法政策修改永久禁止，或将文档清理授权扩张为删减门禁的授权。",
+            "triggered": false,
+            "evidence": "保留依既有政策经 owner 批准调整的路径，未永久禁止合法政策变更或扩张文档清理授权。"
+          }
+        ],
+        "notes": "完整识别规则自身的未经批准削弱及随之缺失的必需检查证据。"
+      },
+      {
+        "id": "missing-required-ci",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "单次核验不能通过：缺少当前候选必需的 arbiter 回执，并保留未获批准删除必需任务的事实。",
+            "met": true,
+            "evidence": "“缺少必需的 ARBITER 证据”，并保留“本次无批准却删除了 arbiter”的 PolicyViolation。"
+          },
+          {
+            "criterion": "持续门禁的声明不成立：平台仅要求 quality，且没有要求 arbiter 工作流，无法保证每次合并必跑 arbiter。",
+            "met": true,
+            "evidence": "直接判定“每次合并必跑 ARBITER”的主张不成立，引用平台仅 required quality 且不要求 arbiter workflow。"
+          },
+          {
+            "criterion": "承认 tests 的 44 个用例与 quality 任务自身成功，不将它们的通过扩展为全部必需任务通过。",
+            "met": true,
+            "evidence": "保留 tests success/runtime_cases:44 与 quality success/scope_complete:true，并说明绿色摘要“不能满足原政策”。"
+          },
+          {
+            "criterion": "分别提出恢复任务执行和核验平台必需任务保护的方案；记录固定快照的回执及平台读回或等价接入验证。",
+            "met": true,
+            "evidence": "分别提出恢复任务及补齐合并保护/触发条件，保存同一修复快照三项回执，验证缺失/跳过/失败阻断后“再读回目标分支保护设置”。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "将 All configured jobs success 等同于所有生效政策要求的任务已执行。",
+            "triggered": false,
+            "evidence": "明确绿色摘要仅证明“当前配置的任务成功”，没有扩展为生效政策全部任务通过。"
+          },
+          {
+            "criterion": "声称已修改平台保护或执行真实 CI，或仅修复 YAML 后就宣称持续门禁已验证。",
+            "triggered": false,
+            "evidence": "“我未访问项目、运行检查或修改平台”；修复及故障演练均标为待执行。"
+          }
+        ],
+        "notes": "分别否定当前交付证据完整性和持续强制执行声明，没有将 YAML 修复等同平台集成验收。"
+      },
+      {
+        "id": "uncovered-acceptance",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "回到用户原始要求，识别取消后停止分页请求以及释放临时文件缺少验收证据。",
+            "met": true,
+            "evidence": "明确原需求另含“取消后停止后续分页请求”和“释放临时文件”，目前“没有…生命周期记录”。"
+          },
+          {
+            "criterion": "承认分页与中文字段已有测试证据、覆盖率达到项目门槛，但这些证据不能替代取消与清理的行为验证。",
+            "met": true,
+            "evidence": "承认分页 8 例、中文 10 例及 96% 超过 90% 门槛；“18 例全绿及高覆盖率均不能补足行为证据”。"
+          },
+          {
+            "criterion": "将整体用户验收标为尚未完成，而不在缺少运行记录时断言取消实现已经失败。",
+            "met": true,
+            "evidence": "“尚不能按原始需求验收通过”；强调“不是已证实实现存在缺陷”。"
+          },
+          {
+            "criterion": "补用户需求到验收条件到可观察证据的映射，提出检查取消后的请求数和临时文件生命周期，并绑定最终快照。",
+            "met": true,
+            "evidence": "逐项将原需求对应现有/缺失证据，提出取消后不再启动后续分页请求、句柄关闭且文件清理的断言，并要求候选变化时更新快照后复验。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "因 18 个测试通过、96% 覆盖率或现有结构检查绿就宣称原始用户需求全部满足。",
+            "triggered": false,
+            "evidence": "明确不能将已有检查通过扩大为完整用户验收。"
+          },
+          {
+            "criterion": "要求通过降低原始验收条件来匹配现有测试，或编造取消路径的运行结果。",
+            "triggered": false,
+            "evidence": "保留原始验收条件并提出补测；没有编造取消或清理的运行结果。"
+          }
+        ],
+        "notes": "取消路径的实现失败和其验收证据缺失被正确区分，需求映射通过逐项说明表达。"
+      },
+      {
+        "id": "consumer-infra-misroute",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "依据 guard 契约与原始日志，将本次检查视为基础设施失败；策略评估尚未开始，不能从中推断业务或结构违规。",
+            "met": true,
+            "evidence": "按契约将 exit 2 判为 InfrastructureFailure，引用 executed_policy_checks=0 及 policy evaluation did not start，不能推断结构违规。"
+          },
+          {
+            "criterion": "识别接入演练暴露下游消费者的错误路由：把所有非零状态交给业务修复、无限重试不符合契约。",
+            "met": true,
+            "evidence": "指出配置“全部非零退出码送往业务修改并无限重试”，加上下游实际派错指令，“足以证实接入分流缺陷”。"
+          },
+          {
+            "criterion": "修复方向分别是检查依赖或网络条件，以及消费者对三类结果的分支处理；基础设施故障不应触发购买逻辑修改。",
+            "met": true,
+            "evidence": "分别由消费者负责人修分流、运行环境负责人修 registry/依赖，明确“没有支持修改购买逻辑的证据”。"
+          },
+          {
+            "criterion": "提出验证下游如何消费 Passed、PolicyViolation、InfrastructureFailure，并在条件改变或存在瞬态证据时有界重试。",
+            "met": true,
+            "evidence": "要求隔离演练验证故障分类 2、不派发业务修改、有界重试，再验证“正常、违规分支消费”；重试限定条件改变或有瞬态依据。"
+          },
+          {
+            "criterion": "区分本次核验证据不完整与持续接入的消费契约已被演练证实有缺陷，保留已通过的 27 个行为用例。",
+            "met": true,
+            "evidence": "一方面候选结构结论缺失，另一方面接入分流缺陷已获观察证实；保留“支付测试实际运行 27 例且通过”。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "指示修改 checkout 购买重试逻辑以消除下载失败，或无限重试相同故障。",
+            "triggered": false,
+            "evidence": "拒绝基础设施失败触发购买逻辑修改；明确有界重试及耗尽报告阻塞。"
+          },
+          {
+            "criterion": "因 runner 定义了 0/1/2 就宣称消费者已正确集成，或把 runner 的基础设施错误抹成 Passed。",
+            "triggered": false,
+            "evidence": "没有因为 runner 契约存在就宣称消费者正确；直接判定接入验收不通过且未抹平故障。"
+          }
+        ],
+        "notes": "三种结果的消费验证以故障、正常、违规分支表达，满足语义要求。"
+      },
+      {
+        "id": "rule-retirement-local",
+        "status": "passed",
+        "must": [
+          {
+            "criterion": "允许这次本地核验通过：题面有既有程序下的 owner 批准、相同生产范围、更强替代约束及当前快照完整检查证据。",
+            "met": true,
+            "evidence": "“Passed（仅本地分支核验）”，依据既有 owner 批准、模块访问控制接管、原范围未缩小及完整同快照回执。"
+          },
+          {
+            "criterion": "承认规则删除不必然是偷降门槛，说明退休依据为模块访问控制接管，同时保留恢复条件和替代检查。",
+            "met": true,
+            "evidence": "认定规则退休可接受，说明 internal 构造器/公开工厂替代机制，并保留批准、替代检查和恢复条件。"
+          },
+          {
+            "criterion": "将外部模块构造失败识别为符合预期的编译可见性反例，并与 38 个真实运行时用例分开描述。",
+            "met": true,
+            "evidence": "指出外部模块预期/实际错误一致，合法入口通过，明确“此反例是编译检查，不是运行时回归测试”；另列 runtime_cases=38。"
+          },
+          {
+            "criterion": "明确本地通过不证明远端持续门禁已生效；远端能力不属于本次请求，缺少平台读取权限不阻塞此本地结论。",
+            "met": true,
+            "evidence": "“未核验远端 CI 或持续合并保护”；它们“不在本次范围，缺少平台读取权限不构成本地核验失败”。"
+          }
+        ],
+        "must_not": [
+          {
+            "criterion": "要求先获得 GitHub 管理权限、追加用户批准或验证远端合并保护，才肯完成已获授权且证据完整的本地核验。",
+            "triggered": false,
+            "evidence": "“无需补充审批或平台证明”，未将管理权限或远端门禁新增为本地通过前提。"
+          },
+          {
+            "criterion": "仅因退休规则就判定政策违规，或把预期的编译可见性失败当成测试基础设施故障。",
+            "triggered": false,
+            "evidence": "允许按已批准程序退休，且将预期编译拒绝认定为有效反例，没有误判基础设施失败。"
+          },
+          {
+            "criterion": "声称远端 CI 或平台保护已验证。",
+            "triggered": false,
+            "evidence": "明确未核验远端 CI 或持续合并保护，没有声称它们已验证。"
+          }
+        ],
+        "notes": "本地已获授权且证据完整的核验得到完成，并明确限制其不证明远端持续门禁。"
+      }
+    ],
+    "summary": {
+      "passed": 11,
+      "failed": 1,
+      "incomplete": 0
+    }
+  },
+  "follow_up": "One response omitted explicit responsibility roles. SKILL.md reporting instructions were clarified; all 12 unchanged cases were independently rerun against the new frozen skill snapshot in round 2. This first-round failure is retained.",
+  "repository_cases_sha256": "99295334fa3aac48392d5114fb4ca8c498e384350378583007dfd5cb8f55e5a8",
+  "cases_hash_note": "cases_sha256 records the original evaluated corpus bytes (CRLF); repository_cases_sha256 records the same JSON corpus normalized to LF for Git. Parsed JSON content was verified identical."
+}

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Test · Guardrails · ARBITER"
+  display_name: "Tests · Guardrails · ARBITER"
   short_description: "将行为测试、结构护栏与路径不变量连接起来，验证 Agent 变更的真实交付证据"
   default_prompt: "使用 $test-guardrails-arbiter，依据当前项目已有工具核验变更的行为、结构和路径不变量，并给出可复验的证据与结论。"

@@ -1,0 +1,354 @@
+{
+  "instruction": "使用指定 skill 分别处理 cases 中的独立核验请求。每案是模拟项目的全部可用原始资料；仅给出核验结论、证据限制和下一步，不实际访问模拟项目、部署或执行交易。区分本次变更的证据与持续门禁是否生效，不将未要求的远端能力作为本地核验的前提。",
+  "cases": [
+    {
+      "id": "filtered-test",
+      "request": "回归修复已提交，请判断这份运行结果是否足以写测试通过。",
+      "snapshot": {
+        "base": "base-101",
+        "candidate": "head-102",
+        "dirty": false
+      },
+      "command": "bazel test //Reader:Tests --test_filter=testFinalLineIsRead --runs_per_test=8",
+      "exit_code": 0,
+      "log": "//Reader:Tests PASSED in 8 out of 8\nExecuted 0 tests, with 0 failures\nfinished with 1 passing out of 1 test cases",
+      "other_evidence": "构建与已有结构检查均成功，没有其他测试执行产物。"
+    },
+    {
+      "id": "checker-and-types",
+      "request": "请分类各检查及总体状态，说明应该修改哪里。",
+      "snapshot": {
+        "base": "base-201",
+        "candidate": "head-202",
+        "dirty": false
+      },
+      "checks": [
+        {
+          "command": "tsc --noEmit",
+          "raw_exit_code": 2,
+          "log": "src/service.ts(14,3): error TS2322: Type 'string' is not assignable to type 'number'.",
+          "tool_contract": "此 TypeScript 检查器的退出码 2 代表编译诊断。类型检查为 enforced。"
+        },
+        {
+          "command": "guard check architecture",
+          "raw_exit_code": 2,
+          "log": "could not download compiler: EOF; failed to build canonical runner",
+          "tool_contract": "该 guard 的 0/1/2 分别代表通过、策略违规、基础设施失败。架构检查为 required。"
+        }
+      ]
+    },
+    {
+      "id": "green-suite",
+      "request": "当前 suite 12 个用例都绿，审查方需要本次支付测试稳定性修改的交付结论。",
+      "policy": "paths tests/payments/**; invariant: 提交一次购买意图，再等待结果；checks: payment-contract",
+      "diff": "@@ tests/payments/payment.test.ts @@\n+ if (true) return; // skip on shared runners\n- expect(receipt.chargeCount).toBe(1);\n@@ tests/payments/helper.ts @@\n+ while (!receipt.visible) { await clickSubscribe(); }",
+      "log": "Suite passed: 12 tests passed, 1 skipped. No failures.",
+      "mutation_log": "Removed purchase fix; compiler failed: Cannot find name 'receipt'; no test was executed."
+    },
+    {
+      "id": "logger-rule",
+      "request": "为这个项目选择一项能执行的 logger owner 检查方案，并判断现有扫描是否足够。",
+      "policy": "仅生产 Swift 代码禁止 owner 以外直接构造 Logger。AppLogger.swift 是唯一 owner，BuildTools/Emit.swift 只生成示例文本。检查声称 code_only。",
+      "files": {
+        "Docs/Logging.md": "禁止 Logger(label: ...)",
+        "BuildTools/Emit.swift": "let sample = \"Logger(label: demo)\"",
+        "Sources/AppLogger.swift": "let logger = Logger(label: \"app\")",
+        "Sources/Feature.swift": "let local = Logger\n  (label: \"feature\")"
+      },
+      "scan": {
+        "command": "rg 'Logger\\(label:' .",
+        "log": "Docs/Logging.md:1; BuildTools/Emit.swift:1; Sources/AppLogger.swift:1",
+        "raw_exit_code": 0
+      }
+    },
+    {
+      "id": "updated-snapshot",
+      "request": "已拿到上轮成功回执；baseline 总数仍是 1，是否可以沿用上一轮结论？",
+      "previous_receipt": {
+        "candidate": "head-501",
+        "policy_hash": "policy-a",
+        "dirty": false,
+        "status": "Passed"
+      },
+      "current": {
+        "candidate": "head-502",
+        "policy_hash": "policy-b",
+        "untracked_files": [
+          "src/new-writer.ts"
+        ],
+        "unstaged": "src/existing.ts modified after check"
+      },
+      "baseline_before": [
+        {
+          "rule": "SINGLE-WRITER",
+          "identity": "legacy-writer-a"
+        }
+      ],
+      "baseline_after": [
+        {
+          "rule": "SINGLE-WRITER",
+          "identity": "new-writer-b"
+        }
+      ]
+    },
+    {
+      "id": "report-only-and-adaptation",
+      "request": "新建治理方案时请参考文章，并判断当前变更能否通过已有门禁。",
+      "project": "Python 项目，有已确认的合并基线和完整候选内容快照。现有 CODEOWNERS 仍参与业务评审，已批准的数据模型使用外键。变更只调整 API 序列化。",
+      "existing_policy": "相关生产单元覆盖率门槛 80%；现有结构和路径必需检查均运行完成。无 applicable 高风险外部操作。",
+      "current_receipts": "同一快照：29 个目标用例真实执行且通过；相关覆盖率 covered=41 total=50；既有回归反证因目标断言失败有效。Guardrails: 20 条 enforced clean，1 条 report-only 发现 2 处存量问题；baseline 条目未增加；扫描哨兵正常；ARBITER required checks passed。",
+      "article_examples": "作者采用 95% 覆盖率、Bazel/Rust、禁新增外键；其仓库没有 CODEOWNERS。"
+    },
+    {
+      "id": "baseline-multiplicity",
+      "request": "同一种历史违规的指纹集合没变；新 baseline 和其他检查都已提交，请判断这次变更是否满足门禁。",
+      "snapshot": {
+        "base": "base-701",
+        "candidate": "head-702",
+        "dirty": false,
+        "content_digest": "content-702",
+        "tool_version": "guard-1.4"
+      },
+      "existing_policy": "policy-701 为生效政策：SINGLE-WRITER 是 enforced；相同指纹可对应多个实际发生位置；每个指纹的发生次数不得超过已批准 baseline。修改债务上限需独立政策批准，本次无此批准。",
+      "baseline_before": {
+        "SINGLE-WRITER:LegacyCache.write:mutable-owner": 3
+      },
+      "baseline_after": {
+        "SINGLE-WRITER:LegacyCache.write:mutable-owner": 4
+      },
+      "scan_receipt": {
+        "snapshot": "content-702",
+        "fingerprint": "SINGLE-WRITER:LegacyCache.write:mutable-owner",
+        "occurrences": [
+          "src/legacy.ts:12",
+          "src/legacy.ts:24",
+          "src/legacy.ts:38",
+          "src/new-cache.ts:19"
+        ],
+        "scope_complete": true,
+        "sentinels": "passed"
+      },
+      "check_log": "baseline-check: set(current.keys()) == set(baseline.keys()); exit 0",
+      "other_receipts": "同一快照的 31 个真实行为用例通过；其余 enforced 结构检查和 ARBITER required checks 均完成且通过。"
+    },
+    {
+      "id": "mutable-arbiter",
+      "request": "业务代码没有改，候选版本的 ARBITER 检查是绿的，请审查这次清单整理能否交付。",
+      "snapshot": {
+        "base": "base-801",
+        "candidate": "head-802",
+        "dirty": false
+      },
+      "existing_policy": "base-801 中的路径约束已生效；删除或降低约束需按项目政策由路径 owner 批准。本次仅授权清理重复文档，没有政策变更批准。",
+      "before": [
+        {
+          "file": "policy/payments.toml",
+          "id": "PAYMENT-ONCE",
+          "paths": [
+            "src/payments/**",
+            "tests/payments/**"
+          ],
+          "invariant": "每个购买意图只提交一次",
+          "forbid": [
+            "while.*clickSubscribe"
+          ],
+          "mode": "enforced",
+          "checks": [
+            "payment-contract",
+            "idempotency"
+          ]
+        },
+        {
+          "file": "policy/ledger.toml",
+          "id": "LEDGER-OWNER",
+          "paths": [
+            "src/ledger/**"
+          ],
+          "invariant": "只有 LedgerStore 可以写账本",
+          "mode": "enforced",
+          "checks": [
+            "ledger-owner"
+          ]
+        }
+      ],
+      "after": [
+        {
+          "file": "policy/payments.toml",
+          "id": "PAYMENT-ONCE",
+          "paths": [
+            "src/payments/ui/**"
+          ],
+          "invariant": "每个购买意图只提交一次",
+          "forbid": [],
+          "mode": "report-only",
+          "checks": [
+            "payment-contract"
+          ]
+        }
+      ],
+      "deleted_files": [
+        "policy/ledger.toml"
+      ],
+      "check_receipt": "head-802 / candidate policy digest policy-802：只按修改后的清单计算 required checks；payment-contract 运行 14 个用例通过；没有运行 idempotency、ledger-owner。清单 schema 校验通过，pipeline success。",
+      "diff_scope": "完整 diff 仅包含上述清单修改和删除，没有其他文件变更。"
+    },
+    {
+      "id": "missing-required-ci",
+      "request": "流水线显示绿色。请同时判断这次交付证据和我们声称的‘每次合并必跑 ARBITER’是否成立。",
+      "snapshot": {
+        "base": "base-901",
+        "candidate": "head-902",
+        "dirty": false
+      },
+      "existing_policy": "policy-901 已生效：所有候选必须执行 tests、quality、arbiter 三个任务；这些任务被定义为必需任务。任务删除需 owner 批准，本次无批准。",
+      "workflow_before": {
+        "jobs": [
+          "tests",
+          "quality",
+          "arbiter"
+        ]
+      },
+      "workflow_after": {
+        "jobs": [
+          "tests",
+          "quality"
+        ]
+      },
+      "platform_readback": {
+        "observed_at_candidate": "head-902",
+        "required_status_contexts": [
+          "quality"
+        ],
+        "ruleset_requires_arbiter_workflow": false
+      },
+      "ci_receipts": [
+        {
+          "job": "tests",
+          "candidate": "head-902",
+          "runtime_cases": 44,
+          "status": "success"
+        },
+        {
+          "job": "quality",
+          "candidate": "head-902",
+          "scope_complete": true,
+          "status": "success"
+        }
+      ],
+      "pipeline_summary": "All configured jobs completed successfully. There is no arbiter job or arbiter receipt for head-902.",
+      "request_scope": "只分析这些证据并提出修复方案，不实际修改平台设置。"
+    },
+    {
+      "id": "uncovered-acceptance",
+      "request": "请按原始需求给出导出功能的验收结论。Agent 写的实现和它自己的 18 个测试都通过了。",
+      "original_user_request": "导出所有分页中的记录，保留中文字段；用户点击取消后要停止后续分页请求，并释放临时文件。",
+      "snapshot": {
+        "base": "base-1001",
+        "candidate": "head-1002",
+        "dirty": false,
+        "policy_digest": "policy-1001"
+      },
+      "acceptance_mapping": [
+        {
+          "criterion": "跨页完整导出",
+          "evidence": "export-all-pages: 8 cases passed"
+        },
+        {
+          "criterion": "中文字段往返一致",
+          "evidence": "export-unicode: 10 cases passed"
+        }
+      ],
+      "raw_receipts": "同一快照真实执行 18 个用例；两个测试文件仅包含上述分页和编码用例，coverage covered=96 total=100，项目门槛 90%；Guardrails 与 ARBITER 已有必需检查均通过。",
+      "implementation_note": "取消按钮和 cleanup 路径随本次变更加入，但资料中没有取消后网络请求数、临时文件生命周期的运行记录，也没有对应断言。",
+      "available_evidence": "以上是本案全部材料，没有独立用户验收记录。"
+    },
+    {
+      "id": "consumer-infra-misroute",
+      "request": "我们已把检查器接入修复 Agent，请验收以下接入演练结果，并说明失败后该修哪里。",
+      "snapshot": {
+        "base": "base-1101",
+        "candidate": "head-1102",
+        "dirty": false,
+        "policy_digest": "policy-1101"
+      },
+      "runner_contract": {
+        "command": "guard check all",
+        "exit_0": "Passed",
+        "exit_1": "PolicyViolation",
+        "exit_2": "InfrastructureFailure"
+      },
+      "runner_receipt": {
+        "raw_exit_code": 2,
+        "log": "registry connection reset; canonical runner dependency unavailable; policy evaluation did not start",
+        "executed_policy_checks": 0
+      },
+      "consumer_config": {
+        "on_exit_0": "mark delivered",
+        "on_exit_nonzero": "ask feature agent to change business implementation and repeat the same check, without retry limit"
+      },
+      "integration_observation": "下游收到 exit 2 后发出了指令：修改 src/checkout.ts 的购买重试逻辑直到 guard 变绿。未下载到依赖，网络条件没有变化，第二次运行仍为 exit 2。",
+      "other_receipts": "同一快照支付行为测试真实执行 27 个用例且通过；没有任何结构违规诊断。",
+      "request_scope": "只解释模拟演练，不实际发送指令、修改业务代码或执行购买。"
+    },
+    {
+      "id": "rule-retirement-local",
+      "request": "仅核验这个本地分支中旧 logger 规则的退休是否可接受；本次不发布，也不要求证明远端持续合并门禁。当前没有 GitHub 平台设置读取权限。",
+      "snapshot": {
+        "base": "base-1201",
+        "candidate": "head-1202",
+        "dirty": false,
+        "content_digest": "content-1202",
+        "approved_policy_digest": "policy-1202",
+        "tool_version": "guard-1.4"
+      },
+      "policy_procedure": "项目允许规则由更强的结构约束接管后退休：规则 owner 确认覆盖范围、执行正反例、记录替代机制和恢复条件后批准。仅核验本地分支不要求读取平台设置。",
+      "approval_record": "规则 owner 已按既有程序批准 policy-1202：退休 LEGACY-LOGGER-TEXT，由模块访问控制接管；原因、范围、替代检查与恢复条件均记录。",
+      "retirement_record": {
+        "retired_rule": "LEGACY-LOGGER-TEXT",
+        "replacement": "Logger 构造器为 Logging 模块 internal；外部生产模块只能调用公开工厂",
+        "scope_before": [
+          "Sources/Feature/**",
+          "Sources/Checkout/**"
+        ],
+        "scope_after": [
+          "Sources/Feature/**",
+          "Sources/Checkout/**"
+        ],
+        "restore_condition": "构造器对外可见、生产模块范围扩张或编译检查缺失时重新评估并恢复适用检查"
+      },
+      "raw_receipts": [
+        {
+          "check": "production-build",
+          "snapshot": "content-1202",
+          "policy": "policy-1202",
+          "scope_complete": true,
+          "exit_code": 0
+        },
+        {
+          "check": "external-constructor-negative-fixture",
+          "snapshot": "content-1202",
+          "expected_error": "Logger initializer is inaccessible due to internal protection level",
+          "actual_error": "Logger initializer is inaccessible due to internal protection level",
+          "fixture_owner": "隔离的外部模块",
+          "note": "此为编译可见性检查的反例，不是运行时回归测试"
+        },
+        {
+          "check": "public-factory-positive-fixture",
+          "snapshot": "content-1202",
+          "exit_code": 0
+        },
+        {
+          "check": "remaining-required-checks",
+          "snapshot": "content-1202",
+          "policy": "policy-1202",
+          "status": "Passed",
+          "runtime_cases": 38,
+          "scope_complete": true,
+          "baseline_increased": false,
+          "sentinels": "passed"
+        }
+      ],
+      "evidence_inventory": "本地核验所需全部证据均已给出且属于同一完整快照；没有远端 CI 或平台保护证明。"
+    }
+  ]
+}

@@ -1,31 +1,38 @@
 # 来源与改编边界
 
-本技能依据用户提供的《让不确定的 Agent 产出确定性的结果》Markdown 导出稿制作；导出记录为文档版本 80，保存于 2026-09-05。本文用原创操作说明提炼方法，没有附带原文全文、媒体或作者仓库实现。
+主来源为用户撰写的公开书籍 [Agent Engineering](https://agentsmesh.github.io/AgentEngineering/)。本次对照的[网站源码版本](https://github.com/AgentsMesh/AgentEngineering/tree/27b71b855dc25ea5677fd1c14018b3092fc9ae83)为 `27b71b855dc25ea5677fd1c14018b3092fc9ae83`，核对日期为 2026-09-05；下面的网页链接可能随书籍继续更新。本技能用原创操作说明提炼方法，不附带全书、媒体或作者项目的执行器实现。
+
+书籍涵盖环境、判定和反馈回路；当前技能聚焦 Tests、Guardrails、ARBITER 三层判定，仅补充支撑判定可信度的接入与维护操作，不声称覆盖整本书。
+
+## 公开书籍到技能的映射
+
+| 书中的机制或边界 | 对照章节 | 本技能落点 |
+| --- | --- | --- |
+| 规则要在合适时机到达；常驻、调用和路径触发各有用途 | [第 8 章：载体](https://agentsmesh.github.io/AgentEngineering/chapters/02-environment/08-carriers.html#sec-carriers) | [接入验收](integration.md)与精简常驻片段 |
+| 内容违规与无法判定分开；消费方要正确处理结果；门本身也能被修改 | [第 11 章：判定的三种失败](https://agentsmesh.github.io/AgentEngineering/chapters/03-verdict/11-three-failures.html#sec-gate-is-mutable) | 三态证据、base/candidate 策略对比和持续门禁证据 |
+| 实际执行数、回归变异、原始覆盖率、执行者持有结论、测试宿主自检 | [第 12 章：Tests](https://agentsmesh.github.io/AgentEngineering/chapters/03-verdict/12-tests.html#sec-tests) | [Tests](tests.md)的运行真实性与范围 |
+| 结构事实来自实际工具；策略与机制分离；本地和 CI 入口一致 | [第 13 章：Guardrails](https://agentsmesh.github.io/AgentEngineering/chapters/03-verdict/13-guardrails.html#sec-policy-mechanism) | [Guardrails](guardrails.md)的工具契约、source view、哨兵与执行边界 |
+| baseline 用指纹多重集记录债务；逐指纹禁止数量增长，拒绝空指纹 | [第 13 章：单调性实现](https://agentsmesh.github.io/AgentEngineering/chapters/03-verdict/13-guardrails.html#sec-monotonic-impl) | `fingerprint → count` 比较及重复违规增长反例 |
+| 路径清单表达必须保持的性质；forbid 是不完备近似，可为空；修改前后各有用途 | [第 14 章：ARBITER](https://agentsmesh.github.io/AgentEngineering/chapters/03-verdict/14-arbiter.html#sec-arbiter) | [ARBITER](arbiter.md)与[清单示例](../assets/arbiter.example.toml) |
+| 规则从事故和样本校准而来；关注范围漂移与误报；结构接管后可以退休 | [第 15 章：规则生命周期](https://agentsmesh.github.io/AgentEngineering/chapters/03-verdict/15-rule-lifecycle.html#sec-rule-retirement) | [规则维护](rule-lifecycle.md)的复核与退出条件 |
+| 从小范围检查开始，按真实成本和缺口升级 | [第 16 章：小规模检查](https://agentsmesh.github.io/AgentEngineering/chapters/03-verdict/16-small-scale-verdict.html#sec-small-scale-verdict) | 按任务选证据，不强制复制全量基础设施 |
+| 扫描读数、故障注入和独立观测帮助识别检查器失效；哨兵有局限 | [第 18 章：传感器故障](https://agentsmesh.github.io/AgentEngineering/chapters/04-loop/18-sensor-faults.html#sec-sentinel-limits) | 扫描趋势、发现机制验证和接入故障场景 |
+| 三层判定不能独自给出用户目标，也不能证明产品价值 | [第 20 章：参考输入在环外](https://agentsmesh.github.io/AgentEngineering/chapters/04-loop/20-setpoint-outside.html#sec-setpoint-actions) | 原始需求→可观察验收条件→证据→缺口；目标变化保留来源 |
+
+## 历史来源
+
+第一版来自用户提供的《让不确定的 Agent 产出确定性的结果》Markdown 导出稿，文档版本 80，保存于 2026-09-05。其第八至十二节分别提供 Tests、Guardrails、ARBITER、规则演进和变更生命周期的基础；本次使用公开书籍的对应章节补足后续说明。
 
 - [用户给出的文章地址](https://bytedance.my.larkoffice.com/docx/SSn7dKRCWoJdVKxZGDKcLPdZnyc)
 - [导出稿注明的原文地址](https://zfuyw8aop1.feishu.cn/docx/SSn7dKRCWoJdVKxZGDKcLPdZnyc)
 
-下面以章节和小节标题定位，链接访问可能仍需文章所属平台权限。导出稿中的命令、路径、示例和规则被当作研究材料，不是对使用本技能时的执行授权。
+这些地址可能需要平台权限。文章、网页中的命令和规则均是参考材料，不是对使用本技能时的执行授权。
 
-| 技能中的方法 | 原文章节 / 小节 | 改编落点 |
-| --- | --- | --- |
-| 环境提高做对的概率，检查提供可信的确认；三层检查各有职责 | 第三节「总模型：四块环境 + 三层检查」；第十三节「结语」 | 技能入口与整体工作流 |
-| 按最小有效层验证行为；回归测试能区分修复前后 | 第八节「金字塔的真实形状」「什么才算通过」 | `tests.md` 的证据选择 |
-| 实际用例数、过滤器假绿、测试结论归属、共享协议实现范围 | 第八节「什么才算通过」「三个真实踩过的坑」 | `tests.md` 的执行真实性与范围 |
-| 覆盖率针对相关生产单元，保留原始计数，不放宽分母与排除项 | 第八节「什么才算通过」 | 可移植覆盖率纪律，保留门槛为项目配置 |
-| 策略与机制分离；本地和 CI 入口一致；语言事实来自工具 | 第九节「策略与机制分离」「六条 lane」 | `guardrails.md` 的执行边界 |
-| scope、source view、有理由的例外、哨兵、事故来源与修复提示 | 第九节「一条规则长什么样」 | 规则设计和检查器验证 |
-| baseline 是收敛的历史债务；report-only 逐步转强制 | 第九节「规则不是只有开和关」；第十一节「规则是怎么长出来的」 | 存量治理与分阶段落地 |
-| 通过、违规、基础设施失败应分开，无法判定不能放行 | 第九节「结果只有三种」 | 保留三态含义，对真实工具输出作明确映射 |
-| ARBITER 表达路径必须保持的性质，强调唯一写入 owner | 第十节「为什么不用 CODEOWNERS」「一个反直觉的规律」 | `arbiter.md` 的定义与使用时机 |
-| 清单字段、新增行匹配、基于合法样例校准、策略误匹配和被忽略 | 第十节「一份清单长什么样」「forbid 是拿真实数据调出来的」「规则会咬到自己」 | 清单示例与匹配边界 |
-| 修改前路由、修改后复验、稳定基线、快照绑定和可行动反馈 | 第十二节「一条变更的完整生命周期」 | 技能流程与验证报告模板 |
+## 案例与移植补充
 
-## 移植时明确保留的界限
-
-1. **不复制原仓库基础设施。** Bazel、Rust runner、六条 lane、`guardrails/guard`、`guard:go`、目录布局和具体产品规则属于文章案例。此技能提供操作流程与示例，不提供这些执行器，也不假定目标仓库安装了它们。
-2. **不把案例数字变成默认策略。** 95% 覆盖率、200 行上限、哨兵 50、并发数和 CI 耗时描述作者当时的仓库，只有目标项目明确采用时才成为约束。
-3. **不把 ARBITER 改写为模型裁判。** 原文没有定义 LLM 仲裁机制或 ARBITER 缩写；本技能将模型解释与可执行检查的证据分开。
-4. **不把局部规则提升为全局政策。** 数据迁移、外键、TTL、构建输出等实例须按目标项目的状态 owner 与不变量重新校准。
-5. **明确轻量补充。** 隔离变异验证、工作区内容指纹、改名和删除的覆盖检查、已有例外的到期或移除条件，是帮助跨项目执行与闭环的操作补充。文章未提供通用 waiver/escape 协议；本技能不据此新增统一审批流程。
-6. **不扩大任务授权。** 三层证据支持当前任务的实现与复验，不代表取得部署、数据变更、对外发送消息或修改其他项目策略的额外权限。
+1. **作者项目的案例配置不是默认政策。** Bazel、Rust runner、六条 lane、`guardrails/guard`、95% 覆盖率、200 行上限、哨兵 50，以及数据库或构建目录规则，都须按目标项目重新选择。本包不提供这些执行器。
+2. **ARBITER 保留原含义。** 它是路径不变量清单，书中没有将其定义为 LLM 仲裁机制，也没有给出可移植的缩写展开。字符串禁止模式不能证明全部不变量。
+3. **移植补充明确区分。** 本技能的需求证据表、工作区内容指纹、base/candidate 策略对照记录、平台保护证据表、规则维护记录，以及[完整模拟案例](worked-example.md)，是落实书中原则的操作设计，不是原文工具的输出或通用配置协议。
+4. **检查结论有范围。** 三层通过只证明声明且实际运行的边界。需求获得验证、持续合并门禁生效、产品价值成立是不同结论，各自需要对应证据。
+5. **保留真实工具语义。** 书中最小 Shell 示例用于说明形状；移植时仍须保存测试命令原始退出码与实际执行数，按工具契约区分断言失败和运行条件故障，不能仅凭输出含有 `timeout` 或数字 `2` 分类。
+6. **不扩大任务授权。** 示例、模板和检查结果不新增部署、数据变更、平台设置变更或对外发消息的权限，也不引入统一审批流程。
